@@ -41,17 +41,17 @@ resource "aws_security_group" "server_sg" {
   }
 }
 
-# Ansible Node
-resource "aws_instance" "ansible" {
-  ami                    = var.ami_id
-  instance_type          = "c7i-flex.large"
-  key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.server_sg.id]
+# # Ansible Node
+# resource "aws_instance" "ansible" {
+#   ami                    = var.ami_id
+#   instance_type          = "c7i-flex.large"
+#   key_name               = var.key_name
+#   vpc_security_group_ids = [aws_security_group.server_sg.id]
 
-  tags = {
-    Name = "Ansible-Node"
-  }
-}
+#   tags = {
+#     Name = "Ansible-Node"
+#   }
+# }
 
 # Java Node
 resource "aws_instance" "java" {
