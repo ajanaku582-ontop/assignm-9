@@ -55,7 +55,7 @@ resource "aws_security_group" "server_sg" {
 
 # Java Node
 resource "aws_instance" "java" {
-  ami                    = var.ami_id
+  ami                    = var.ami
   instance_type          = "c7i-flex.large"
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.server_sg.id]
@@ -67,7 +67,7 @@ resource "aws_instance" "java" {
 
 # Nginx Node
 resource "aws_instance" "nginx" {
-  ami                    = var.ami_id
+  ami                    = var.ami
   instance_type          = "c7i-flex.large"
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.server_sg.id]
