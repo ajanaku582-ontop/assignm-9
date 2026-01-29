@@ -19,7 +19,7 @@ jobs:
     env:
       TF_IN_AUTOMATION: true
       TF_INPUT: false
-      TF_VAR_ami_id: ${{ secrets.AMI }}
+      TF_VAR_ami_id: ${{ secrets.AMI_ID }}
       TF_VAR_key_name: ${{ secrets.KEY_NAME }}
 
     steps:
@@ -36,7 +36,7 @@ jobs:
         working-directory: terraform
         run: |
           cat <<EOF > terraform.tfvars
-          ami   = "${{ secrets.TF_VAR_ami}}"
+          ami   = "${{ secrets.TF_VAR_ami_id}}"
           key_name = "${{ secrets.TF_VAR_key_name }}"
           EOF
 
