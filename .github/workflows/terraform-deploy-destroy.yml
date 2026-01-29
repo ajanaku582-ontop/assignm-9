@@ -8,9 +8,10 @@ on:
         required: true
         type: choice
         options:
+          - plan
           - apply
           - destroy
-        default: apply
+        default: plan
 
 jobs:
   terraform:
@@ -19,18 +20,27 @@ jobs:
     env:
       TF_IN_AUTOMATION: true
       TF_INPUT: false
-      TF_VAR_ami_id: ${{ secrets.AMI_ID }}
-      TF_VAR_key_name: ${{ secrets.KEY_NAME }}
+      ami: ${{ secrets.TF_VAR_ami_id  }}
+      key_name: ${{ secrets.TF_VAR_key_name }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2
+          aws-region: "us-east-2"
+
+      - name: generate variable.tfvars
+        working-directory: terraform
+        run: |
+          cat <<EOF > terraform.tfvars
+          ami   = "${{ secrets.TF_VAR_ami_id}}"
+          key_name = "${{ secrets.TF_VAR_key_name }}"
+          EOF
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -42,6 +52,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
+        if: github.event.inputs.tf_action == 'plan'
         working-directory: terraform
         run: terraform plan
 
@@ -60,12 +71,31 @@ jobs:
         run: |
           echo "JAVA_IP=$(terraform output -raw java_node_ip)" >> $GITHUB_ENV
           echo "NGINX_IP=$(terraform output -raw nginx_node_ip)" >> $GITHUB_ENV
-          echo "ANSIBLE_IP=$(terraform output -raw ansible_node_ip)" >> $GITHUB_ENV
+          # echo "ANSIBLE_IP=$(terraform output -raw ansible_node_ip)" >> $GITHUB_ENV
       - name: Show Outputs
         if: github.event.inputs.tf_action == 'apply'
         run: |
              echo "Java Node IP: ${{ env.JAVA_IP }}"
              echo "Nginx Node IP: ${{ env.NGINX_IP }}"
-             echo "Ansible Node IP: ${{ env.ANSIBLE_IP }}"
+           # echo "Ansible Node IP: ${{ env.ANSIBLE_IP }}"
 
-             
+  run-ansible:
+    name: Run Ansible Playbook
+    needs: terraform
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: listout
+        run: |
+          pwd
+          ls -ltr
+          ansible --version
+          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > key_name.pem
+          chmod 400 key_name.pem
+
+      - name: Run Playbook
+        run: |
+          ansible-playbook -i inventory/dev.ini pipeline.yml
