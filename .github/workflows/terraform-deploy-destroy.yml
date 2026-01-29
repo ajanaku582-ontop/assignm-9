@@ -98,4 +98,4 @@ jobs:
 
       - name: Run Playbook
         run: |
-          ansible-playbook -i inventory/dev.ini pipeline.yml
+          ansible-playbook -i inventory/dev.ini site.yml
